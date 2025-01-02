@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.distutils.bdist_wheel]
+universal = true
+
+[project]
+name = "anyfs"
+version = "0.0.1"
+authors = [
+    {name = "Igor Sharonov"},
+]
+description = "A fuse-based filesystem"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fuse-python >= 1.0.6",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Linux"
+]
+
+[project.scripts]
+anyfs = "anyfs.program:main"
+
+[project.urls]
+Homepage = "https://github.com/igsha/anyfs"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["anyfs"]
+
+[tool.setuptools.package-data]
+anyfs = ["*.sh"]
+
+[tool.setuptools.exclude-package-data]
+anyfs = ["launcher.py"]
