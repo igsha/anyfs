@@ -7,26 +7,29 @@ class Protocol:
         self.ostream = ostream
         self.tmpdir = tmpdir
 
-    def take(self, path):
+    def fetch(self, path):
         self.ostream.write(f"{path}\n".encode())
         self.ostream.flush()
 
-        t = self.istream.readline().strip().decode()
-        (cmd, count) = t.split(" ")
-        count = int(count)
-        if cmd == "bytes":
-            return self.istream.read(count)
-        elif cmd == "local":
-            filename = self.istream.readline().strip().decode()
-            return open(filename, "rb").read()
-        elif cmd == "entities":
-            return [self.istream.readline().strip().decode() for _ in range(count)]
-        elif cmd == "url":
-            return FileCache(self.istream.readline().strip().decode(), self.tmpdir)
-        elif cmd == "notfound":
-            return None
-        else:
-            raise RuntimeError(f"Unknown command {cmd}")
+        while t := self.istream.readline().strip().decode():
+            print("Got", t)
+            tpl = t.split(" ", 1)
+            cmd = tpl[0]
+            if cmd == "bytes":
+                count, filepath = tpl[1].split(" ", 1)
+                yield filepath, self.istream.read(int(count))
+            elif cmd == "entities":
+                count, dirpath = tpl[1].split(" ", 1)
+                lst = [self.istream.readline().strip().decode() for _ in range(int(count))]
+                yield dirpath, lst
+            elif cmd == "url":
+                yield tpl[1], FileCache(self.istream.readline().strip().decode(), self.tmpdir)
+            elif cmd == "eom":
+                break
+            elif cmd == "notfound":
+                yield tpl[1], None
+            else:
+                raise RuntimeError(f"Unknown command {cmd}")
 
 
 class FakeProtocol:

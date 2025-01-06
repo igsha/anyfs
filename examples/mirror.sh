@@ -6,12 +6,13 @@ while read -r PATHARG; do
     RELPATH="${DIR}${PATHARG}"
     if [[ -d "$RELPATH" ]]; then
         ENTITIES=("$RELPATH"/*)
-        echo "entities ${#ENTITIES[@]}"
+        echo "entities ${#ENTITIES[@]} ${PATHARG}"
         printf "%s\n" "${ENTITIES[@]#$RELPATH/}"
     elif [[ -r "$RELPATH" ]]; then
-        stat -c "bytes %s" "$RELPATH"
+        stat -c "bytes %s ${PATHARG}" "$RELPATH"
         cat "$RELPATH"
     else
-        echo "notfound 0"
+        echo "notfound ${PATHARG}"
     fi
+    echo "eom"
 done
