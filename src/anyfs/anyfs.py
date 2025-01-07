@@ -1,11 +1,10 @@
-import argparse
 import fuse
 import os
 
-from .caching import FileCache
+from .caching import ContentCache
+from .communicator import Communicator
 from .mystat import MyStat
-from .pathmap import PathMap
-from .protocol import Protocol
+from .pathstorage import PathStorage
 
 
 fuse.fuse_python_api = (0, 2)
@@ -13,16 +12,16 @@ fuse.fuse_python_api = (0, 2)
 
 class AnyFS(fuse.Fuse):
     # ostream should be opened the first
-    def __init__(self, istream, ostream, tmpdir, *args, **kwargs):
+    def __init__(self, istream, ostream, *args, **kwargs):
         super(AnyFS, self).__init__(*args, **kwargs)
-        protocol = Protocol(istream, ostream, tmpdir)
-        self.map = PathMap(protocol)
+        communicator = Communicator(istream, ostream)
+        self.map = PathStorage(communicator)
 
     def getattr(self, path):
         t = self.map.get(path)
         if isinstance(t, list):
             return MyStat.dir()
-        elif isinstance(t, bytes) or isinstance(t, FileCache):
+        elif isinstance(t, bytes) or isinstance(t, ContentCache):
             return MyStat.file(len(t))
         else:
             return -fuse.ENOENT
@@ -41,14 +40,14 @@ class AnyFS(fuse.Fuse):
             return -fuse.EACCES
 
         obj = self.map.get(path)
-        if isinstance(obj, FileCache):
+        if isinstance(obj, ContentCache):
             obj.open()
 
         return 0
 
     def release(self, path, flags):
         obj = self.map.get(path)
-        if isinstance(obj, FileCache):
+        if isinstance(obj, ContentCache):
             obj.close()
 
         return 0
@@ -57,5 +56,7 @@ class AnyFS(fuse.Fuse):
         t = self.map.get(path)
         if isinstance(t, list):
             return -fuse.EISDIR
+        elif isinstance(t, IOError):
+            return -fuse.EIO
 
         return t[min(offset, len(t)):min(offset + size, len(t))]

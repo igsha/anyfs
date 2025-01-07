@@ -3,7 +3,7 @@ import shutil
 from urllib.request import Request, urlopen
 
 
-class FileCache:
+class ContentCache:
     def __init__(self, url, tempdir):
         self.url = url
         self.tempfile = Path(tempdir).joinpath(url.replace("/", "-").replace(":", "-"))
@@ -51,7 +51,11 @@ class FileCache:
         if self._size is None:
             r = Request(self.url, method="HEAD")
             with urlopen(r) as f:
-                self._size = int(f.getheader("Content-Length"))
+                length = f.getheader("Content-Length")
+                if length is None: # network issue
+                    return 0
+                else:
+                    self._size = int(length)
 
         return self._size
 
@@ -61,14 +65,14 @@ if __name__ == "__main__":
 
     testurl = "https://pic.rutubelist.ru/video/3a/c2/3ac2fd23314dfb81ed877e6c75584ffc.jpg"
     with tempfile.TemporaryDirectory() as tempdir:
-        fc = FileCache(testurl, tempdir)
+        fc = ContentCache(testurl, tempdir)
         print("Tempfile", fc.tempfile)
         print("Size:", len(fc))
         fc.open()
         print("4 bytes starting from 6:", fc[6:10])
         fc.close()
 
-    with tempfile.TemporaryDirectory() as tempdir, FileCache(testurl, tempdir) as fc:
+    with tempfile.TemporaryDirectory() as tempdir, ContentCache(testurl, tempdir) as fc:
         print("Tempfile", fc.tempfile)
         print("Size:", len(fc))
         print("4 bytes starting from 6:", fc[6:10])

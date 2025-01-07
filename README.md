@@ -40,7 +40,7 @@ $ fusermount -u /mount/point
 Resource is a script or binary program that provides a directory structure.
 
 `anyfs` sends through stdin the path to the file or directory.
-The answer on stdout should be in the format `<cmd> <count>`, where `<cmd>` is:
+The answer on stdout should be in the format `<cmd> [<count>] <path>`, where `<cmd>` is:
 * `bytes` to read.
 The `<count>` indicates how many bytes to read.
 * `entities` is a list of objects in the directory.
@@ -49,3 +49,5 @@ The `<count>` indicates how many bytes to read.
 * `notfound` means that the content is unavailable.
 * `ioerror` means that there is a problem with the content.
 Try again.
+
+Special `eom` command is always indicates that there are no more messages to cache.

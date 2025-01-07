@@ -1,15 +1,13 @@
 import os
 
 
-class PathMap:
-    def __init__(self, protocol):
-        self.protocol = protocol
+class PathStorage:
+    def __init__(self, communicator):
+        self.communicator = communicator
         self.map = {}
 
     def _fetch(self, path):
-        print("PathMap: fetch", path)
-        for p, val in self.protocol.fetch(path):
-            print("PathMap:", "write", p, val)
+        for p, val in self.communicator.fetch(path):
             self.map[p] = val
 
     def get(self, path):
@@ -20,20 +18,15 @@ class PathMap:
         if path in self.map:
             return self.map[path]
 
-        print("PathMap: investigate", path)
         cur = "/"
         prev = [""]
         for p in path.split("/"):
             cur = os.path.join(cur, p)
-            print("PathMap: investigate2", cur)
             if cur in self.map:
-                print("PathMap: pass", cur)
                 pass
             elif p in prev:
-                print("PathMap: fetch", cur)
                 self._fetch(cur)
             else:
-                print("PathMap: None")
                 return None
 
             prev = self.map[cur]

@@ -4,7 +4,6 @@ import os
 import signal
 import subprocess
 import sys
-import tempfile
 
 from .anyfs import AnyFS
 from . import __version__
@@ -32,12 +31,11 @@ def main():
             sys.exit(2)
 
     process = subprocess.Popen(args.cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, text=False)
-    with tempfile.TemporaryDirectory() as tmpdir:
-        server = AnyFS(process.stdout, process.stdin, tmpdir)
-        server.parse(args=unknown_args, errex=1)
-        old_handler = signal.signal(signal.SIGINT, signal.SIG_DFL)
-        server.main()
-        signal.signal(signal.SIGINT, old_handler)
+    server = AnyFS(process.stdout, process.stdin)
+    server.parse(args=unknown_args, errex=1)
+    old_handler = signal.signal(signal.SIGINT, signal.SIG_DFL)
+    server.main()
+    signal.signal(signal.SIGINT, old_handler)
 
 
 if __name__ == '__main__':

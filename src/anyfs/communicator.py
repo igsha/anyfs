@@ -1,18 +1,24 @@
-from .caching import FileCache
+import atexit
+import tempfile
+
+from .caching import ContentCache
 
 
-class Protocol:
-    def __init__(self, istream, ostream, tmpdir):
+class Communicator:
+    def __init__(self, istream, ostream):
         self.istream = istream
         self.ostream = ostream
-        self.tmpdir = tmpdir
+        self.tmpdir = tempfile.TemporaryDirectory(prefix="anyfs-")
+        atexit.register(self.cleanup)
+
+    def cleanup(self):
+        self.tmpdir.cleanup()
 
     def fetch(self, path):
         self.ostream.write(f"{path}\n".encode())
         self.ostream.flush()
 
         while t := self.istream.readline().strip().decode():
-            print("Got", t)
             tpl = t.split(" ", 1)
             cmd = tpl[0]
             if cmd == "bytes":
@@ -23,16 +29,18 @@ class Protocol:
                 lst = [self.istream.readline().strip().decode() for _ in range(int(count))]
                 yield dirpath, lst
             elif cmd == "url":
-                yield tpl[1], FileCache(self.istream.readline().strip().decode(), self.tmpdir)
+                yield tpl[1], ContentCache(self.istream.readline().strip().decode(), self.tmpdir.name)
             elif cmd == "eom":
                 break
             elif cmd == "notfound":
                 yield tpl[1], None
+            elif cmd == "ioerror":
+                yield tpl[1], IOError("network failure")
             else:
                 raise RuntimeError(f"Unknown command {cmd}")
 
 
-class FakeProtocol:
+class FakeCommunicator:
     def __init__(self, *args, **kwargs):
         self.map = {
                 "/": ["d0", "d1", "f0"],
@@ -44,5 +52,5 @@ class FakeProtocol:
                 "/d0/d2": [],
         }
 
-    def take(self, path):
+    def fetch(self, path):
         return self.map.get(path, None)
