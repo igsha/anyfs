@@ -1,8 +1,10 @@
 { lib, python3Packages }:
 
-python3Packages.buildPythonApplication {
+let
+  toml = builtins.fromTOML (builtins.readFile ./pyproject.toml);
+in python3Packages.buildPythonApplication {
   pname = "anyfs";
-  version = "0.0.1";
+  version = toml.project.version;
   pyproject = true;
 
   src = ./.;

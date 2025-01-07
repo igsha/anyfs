@@ -1,15 +1,20 @@
 import argparse
 import fuse
+from importlib.metadata import version, PackageNotFoundError
 import os
 import signal
 import subprocess
 import sys
 
 from .anyfs import AnyFS
-from . import __version__
 
 
 def main():
+    try:
+        __version__ = version(__package__ or __name__)
+    except PackageNotFoundError:
+        __version__ = "dev"
+
     args_parser = argparse.ArgumentParser()
     args_parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     args_parser.add_argument('-c', '--cmd', help="Command to run with args", required=True, nargs='+')
