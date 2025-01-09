@@ -6,9 +6,20 @@ class PathStorage:
         self.communicator = communicator
         self.map = {}
 
+    def _appendToParent(self, path):
+        parent, child = os.path.split(path)
+        if parent not in self.map:
+            if parent != "/":
+                self._appendToParent(parent)
+
+            self.map[parent] = []
+
+        self.map[parent].append(child)
+
     def _fetch(self, path):
         for p, val in self.communicator.fetch(path):
             self.map[p] = val
+            self._appendToParent(p)
 
     def get(self, path):
         path = path.strip()

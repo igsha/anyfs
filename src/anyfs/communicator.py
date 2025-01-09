@@ -24,10 +24,8 @@ class Communicator:
             if cmd == "bytes":
                 count, filepath = tpl[1].split(" ", 1)
                 yield filepath, self.istream.read(int(count))
-            elif cmd == "entities":
-                count, dirpath = tpl[1].split(" ", 1)
-                lst = [self.istream.readline().strip().decode() for _ in range(int(count))]
-                yield dirpath, lst
+            elif cmd == "entity":
+                yield tpl[1], []
             elif cmd == "url":
                 yield tpl[1], ContentCache(self.istream.readline().strip().decode(), self.tmpdir.name)
             elif cmd == "link":
