@@ -13,7 +13,7 @@ fuse.fuse_python_api = (0, 2)
 class AnyFS(fuse.Fuse):
     # ostream should be opened the first
     def __init__(self, istream, ostream, *args, **kwargs):
-        super(AnyFS, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         communicator = Communicator(istream, ostream)
         self.map = PathStorage(communicator)
         self.file_class = self._fileClass()
@@ -44,6 +44,8 @@ class AnyFS(fuse.Fuse):
             return MyStat.dir()
         elif isinstance(t, bytes) or isinstance(t, ContentCache):
             return MyStat.file(len(t))
+        elif isinstance(t, str):
+            return MyStat.link()
         else:
             return -fuse.ENOENT
 
@@ -54,3 +56,10 @@ class AnyFS(fuse.Fuse):
                 yield fuse.Direntry(r)
         else:
             return -fuse.ENOENT
+
+    def readlink(self, path):
+        t = self.map.get(path)
+        if isinstance(t, str):
+            return t
+        else:
+            return -fuse.ENODEV

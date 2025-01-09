@@ -30,6 +30,8 @@ class Communicator:
                 yield dirpath, lst
             elif cmd == "url":
                 yield tpl[1], ContentCache(self.istream.readline().strip().decode(), self.tmpdir.name)
+            elif cmd == "link":
+                yield tpl[1], self.istream.readline().strip().decode()
             elif cmd == "eom":
                 break
             elif cmd == "notfound":
