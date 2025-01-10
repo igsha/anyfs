@@ -15,13 +15,13 @@ class AnyFS(fuse.Fuse):
     def __init__(self, istream, ostream, *args, **kwargs):
         super().__init__(*args, **kwargs)
         communicator = Communicator(istream, ostream)
-        self.map = PathStorage(communicator)
+        self.storage = PathStorage(communicator)
         self.file_class = self._fileClass()
 
     def _fileClass(parent):
         class FileHandler(object):
             def __init__(self, path, flags, *mode):
-                obj = parent.map.get(path)
+                obj = parent.storage.get(path)
                 if isinstance(obj, ContentCache):
                     self.fp = obj.open()
                 elif isinstance(obj, bytes):
@@ -39,7 +39,7 @@ class AnyFS(fuse.Fuse):
         return FileHandler
 
     def getattr(self, path):
-        t = self.map.get(path)
+        t = self.storage.get(path)
         if isinstance(t, list):
             return MyStat.dir()
         elif isinstance(t, bytes) or isinstance(t, ContentCache):
@@ -50,7 +50,7 @@ class AnyFS(fuse.Fuse):
             return -fuse.ENOENT
 
     def readdir(self, path, offset):
-        t = self.map.get(path)
+        t = self.storage.get(path)
         if isinstance(t, list):
             for r in  ['.', '..', *t]:
                 yield fuse.Direntry(r)
@@ -58,8 +58,8 @@ class AnyFS(fuse.Fuse):
             return -fuse.ENOENT
 
     def readlink(self, path):
-        t = self.map.get(path)
+        t = self.storage.get(path)
         if isinstance(t, str):
-            return t
+            return os.path.join(self.fuse_args.mountpoint, t[1:])
         else:
             return -fuse.ENODEV

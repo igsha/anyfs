@@ -1,4 +1,3 @@
-import argparse
 import fuse
 from importlib.metadata import version, PackageNotFoundError
 import os
@@ -15,13 +14,18 @@ def main():
     except PackageNotFoundError:
         __version__ = "dev"
 
-    args_parser = argparse.ArgumentParser()
-    args_parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
-    args_parser.add_argument('-c', '--cmd', help="Command to run with args", required=True, nargs='+')
-    args, unknown_args = args_parser.parse_known_args()
+    def parselist(option, opt_str, value, parser):
+        idx = len(parser.rargs)
+        if "--" in parser.rargs:
+            idx = parser.rargs.index("--")
 
-    parser = fuse.FuseOptParse()
-    parser.parse_args(args=unknown_args)
+        lst = parser.rargs[:idx]
+        del parser.rargs[:idx]
+        setattr(parser.values, "cmd", lst)
+
+    parser = fuse.FuseOptParse(version="%prog " + __version__)
+    parser.add_option("-c", "--cmd", help="Fetcher command", action="callback", callback=parselist)
+    options, args = parser.parse_args()
     mountpoint = parser.fuse_args.mountpoint
     if mountpoint is None:
         print('Mountpoint does not exist. Cannot continue. Exiting...')
@@ -35,9 +39,8 @@ def main():
             print('Abort...')
             sys.exit(2)
 
-    process = subprocess.Popen(args.cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, text=False)
-    server = AnyFS(process.stdout, process.stdin)
-    server.parse(args=unknown_args, errex=1)
+    process = subprocess.Popen(options.cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, text=False)
+    server = AnyFS(process.stdout, process.stdin, fuse_args=parser.fuse_args)
     old_handler = signal.signal(signal.SIGINT, signal.SIG_DFL)
     server.main()
     signal.signal(signal.SIGINT, old_handler)

@@ -23,5 +23,5 @@ class MyStat(fuse.Stat):
     @classmethod
     def link(clazz):
         st = MyStat()
-        st.st_mode = stat.s_IFLINK | 0o555
+        st.st_mode = stat.S_IFLNK | 0o555
         return st
