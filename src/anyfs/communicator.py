@@ -27,7 +27,14 @@ class Communicator:
             elif cmd == "entity":
                 yield tpl[1], []
             elif cmd == "url":
-                yield tpl[1], ContentCache(self.istream.readline().strip().decode(), self.tmpdir.name)
+                count, filepath = tpl[1].split(" ", 1)
+                url = self.istream.readline().strip().decode()
+                headers = {}
+                for _ in range(int(count)):
+                    key, value = self.istream.readline().strip().decode().split(":", 1)
+                    headers[key] = value
+
+                yield filepath, ContentCache(url, self.tmpdir.name, headers)
             elif cmd == "link":
                 yield tpl[1], self.istream.readline().strip().decode()
             elif cmd == "eom":

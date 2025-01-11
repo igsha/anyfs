@@ -7,15 +7,13 @@ from urllib.error import HTTPError
 
 
 class ContentCache:
-    def __init__(self, url, tempdir):
+    def __init__(self, url, tempdir, headers={}):
         self.url = url
         self.tempdir = tempdir
         self.tempfile = None
         self._size = None
         self.iscached = False
-
-        domain = urlparse(url)._replace(path="", params="", query="", fragment="")
-        self.headers = dict(referer=domain.geturl())
+        self.headers = headers
 
     def open(self):
         if self.tempfile is None:
