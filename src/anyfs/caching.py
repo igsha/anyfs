@@ -1,13 +1,16 @@
 from pathlib import Path
 import shutil
+from tempfile import NamedTemporaryFile
 from urllib.request import Request, urlopen
 from urllib.parse import urlparse
+from urllib.error import HTTPError
 
 
 class ContentCache:
     def __init__(self, url, tempdir):
         self.url = url
-        self.tempfile = Path(tempdir).joinpath(url.replace("/", "-").replace(":", "-"))
+        self.tempdir = tempdir
+        self.tempfile = None
         self._size = None
         self.iscached = False
 
@@ -15,12 +18,17 @@ class ContentCache:
         self.headers = dict(referer=domain.geturl())
 
     def open(self):
-        if not self.iscached:
+        if self.tempfile is None:
             r = Request(self.url, headers=self.headers)
-            with urlopen(r) as resp, open(self.tempfile, "wb") as f:
-                shutil.copyfileobj(resp, f)
+            try:
+                with urlopen(r) as resp, NamedTemporaryFile(mode="wb", dir=self.tempdir, delete=False) as f:
+                    shutil.copyfileobj(resp, f)
+                    self.tempfile = Path(f.name)
+            except HTTPError as ex:
+                if ex.code == 404:
+                    print("Not found resource", self.url)
 
-            self.iscached = True
+                raise
 
             if self._size is None:
                 self._size = self.tempfile.stat().st_size
@@ -47,11 +55,7 @@ class ContentCache:
             r = Request(self.url, method="HEAD", headers=self.headers)
             try:
                 with urlopen(r) as f:
-                    length = f.getheader("Content-Length")
-                    if length is None: # network issue
-                        return 0
-                    else:
-                        self._size = int(length)
+                    self._size = int(f.getheader("Content-Length"))
             except Exception as ex:
                 return 0
 
