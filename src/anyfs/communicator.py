@@ -9,6 +9,7 @@ class Communicator:
         self.istream = istream
         self.ostream = ostream
         self.tmpdir = tempfile.TemporaryDirectory(prefix="anyfs-")
+        self.session = ContentCache.newSession()
         atexit.register(self.cleanup)
 
     def cleanup(self):
@@ -34,7 +35,7 @@ class Communicator:
                     key, value = self.istream.readline().strip().decode().split(":", 1)
                     headers[key] = value
 
-                yield filepath, ContentCache(url, self.tmpdir.name, headers)
+                yield filepath, ContentCache(self.session, url, self.tmpdir.name, headers)
             elif cmd == "link":
                 yield tpl[1], self.istream.readline().strip().decode()
             elif cmd == "eom":
@@ -60,4 +61,4 @@ class FakeCommunicator:
         }
 
     def fetch(self, path):
-        return self.map.get(path, None)
+        yield self.map.get(path, None)

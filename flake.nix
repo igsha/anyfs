@@ -14,7 +14,7 @@
     };
     devShells.x86_64-linux.default = with pkgs; mkShell {
       nativeBuildInputs = [
-        (python3.withPackages (ps: with ps; [ fuse ]))
+        (python3.withPackages (ps: with ps; [ fuse requests ]))
       ];
       PYTHONDONTWRITEBYTECODE = 1;
     };

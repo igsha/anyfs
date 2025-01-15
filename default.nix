@@ -10,7 +10,7 @@ in python3Packages.buildPythonApplication {
   src = ./.;
 
   build-system = with python3Packages; [ setuptools ];
-  dependencies = with python3Packages; [ fuse ];
+  dependencies = with python3Packages; [ fuse requests ];
 
   meta = {
     description = "A fuse-based filesystem";
