@@ -26,10 +26,13 @@ def main():
     parser = fuse.FuseOptParse(version="%prog " + __version__)
     parser.add_option("-c", "--cmd", help="Fetcher command", action="callback", callback=parselist)
     options, args = parser.parse_args()
+    if "--help" in sys.argv[1:] or "-h" in sys.argv[1:]:
+        return 0
+
     mountpoint = parser.fuse_args.mountpoint
     if mountpoint is None:
         print('Mountpoint does not exist. Cannot continue. Exiting...')
-        sys.exit(1)
+        return 1
 
     if not os.path.isdir(mountpoint):
         ans = input(f'Mountpoint {mountpoint} does not exist. Do you want me to create it (y/n)? ')
@@ -37,14 +40,15 @@ def main():
             os.mkdir(mountpoint)
         else:
             print('Abort...')
-            sys.exit(2)
+            return 2
 
     process = subprocess.Popen(options.cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, text=False)
     server = AnyFS(process.stdout, process.stdin, fuse_args=parser.fuse_args)
     old_handler = signal.signal(signal.SIGINT, signal.SIG_DFL)
     server.main()
     signal.signal(signal.SIGINT, old_handler)
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

@@ -43,11 +43,12 @@ Resource is a script or binary program that provides a directory structure.
 The answer on stdout should be in the format `<cmd> [<count>] <path>`, where `<cmd>` is:
 * `bytes` to read.
 The `<count>` indicates how many bytes to read.
-* `entities` is a list of objects in the directory.
-`anyfs` will read `<count>` lines.
+* `entity` is declaration of entity object: file or directory.
 * `url` indicates that the next line contains url to download the content.
+The `<count>` indicates that there are additional `<count>` lines with URL header parts.
+* `link` contains the redirection path.
 * `notfound` means that the content is unavailable.
 * `ioerror` means that there is a problem with the content.
 Try again.
 
-Special `eom` command is always indicates that there are no more messages to cache.
+Special `eom` command is always indicates that there are no more messages associated with the `<path>`.

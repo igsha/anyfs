@@ -6,9 +6,10 @@ while read -r PATHARG; do
     RELPATH="${DIR}${PATHARG}"
     if [[ -d "$RELPATH" ]]; then
         ENTITIES=("$RELPATH"/*)
-        echo "entities ${#ENTITIES[@]} ${PATHARG}"
-        printf "%s\n" "${ENTITIES[@]#$RELPATH/}"
+        PATHARG="${PATHARG%/}"
+        printf "entity ${PATHARG}/%s\n" "${ENTITIES[@]#$RELPATH/}"
     elif [[ -r "$RELPATH" ]]; then
+        RELPATH="$(readlink -f "$RELPATH")"
         stat -c "bytes %s ${PATHARG}" "$RELPATH"
         cat "$RELPATH"
     else

@@ -11,10 +11,9 @@ declare -A URLMAP=(\
 while read -r PATHARG; do
     NAMEWOSLASH="${PATHARG:1:${#PATHARG}}"
     if [[ "$PATHARG" == / ]]; then
-        echo "entities ${#URLMAP[@]} /"
-        printf "%s\n" "${!URLMAP[@]}"
+        printf "entity /%s\n" "${!URLMAP[@]}"
     elif [[ -v URLMAP[$NAMEWOSLASH] ]]; then
-        echo "url $PATHARG"
+        echo "url 0 $PATHARG"
         echo "${URLMAP[$NAMEWOSLASH]}"
     else
         echo "notfound $PATHARG"

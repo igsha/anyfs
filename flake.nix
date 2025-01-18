@@ -13,9 +13,7 @@
       default = anyfs;
     };
     devShells.x86_64-linux.default = with pkgs; mkShell {
-      nativeBuildInputs = [
-        (python3.withPackages (ps: with ps; [ fuse requests ]))
-      ];
+      inputsFrom = [ self.packages.x86_64-linux.anyfs ];
       PYTHONDONTWRITEBYTECODE = 1;
     };
   };
