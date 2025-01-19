@@ -25,6 +25,8 @@ def main():
 
     parser = fuse.FuseOptParse(version="%prog " + __version__)
     parser.add_option("-c", "--cmd", help="Fetcher command", action="callback", callback=parselist)
+    parser.add_option("-r", "--read", help="Pipe for reading commands")
+    parser.add_option("-w", "--write", help="Pipe for writing paths, open it first")
     options, args = parser.parse_args()
     if "--help" in sys.argv[1:] or "-h" in sys.argv[1:]:
         return 0
@@ -42,8 +44,15 @@ def main():
             print('Abort...')
             return 2
 
-    process = subprocess.Popen(options.cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, text=False)
-    server = AnyFS(process.stdout, process.stdin, fuse_args=parser.fuse_args)
+    if "cmd" in options.__dir__():
+        process = subprocess.Popen(options.cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, text=False)
+        istream = process.stdout
+        ostream = process.stdin
+    else:
+        ostream = open(options.write, "wb")
+        istream = open(options.read, "rb")
+
+    server = AnyFS(istream, ostream, fuse_args=parser.fuse_args)
     old_handler = signal.signal(signal.SIGINT, signal.SIG_DFL)
     server.main()
     signal.signal(signal.SIGINT, old_handler)
