@@ -1,7 +1,7 @@
 import atexit
 import tempfile
 
-from .caching import ContentCache
+from .contentcache import ContentCache
 
 
 class Communicator:

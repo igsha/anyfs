@@ -25,6 +25,8 @@ class PathStorage:
                 self.map[p] = val
 
             self._appendToParent(p)
+            if isinstance(val, str):
+                self._appendToParent(val)
 
     def get(self, path):
         path = path.strip()

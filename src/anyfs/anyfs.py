@@ -1,6 +1,7 @@
 import fuse
 import io
 import os
+from threading import Lock
 
 from .communicator import Communicator, ContentCache
 from .mystat import MyStat
@@ -27,14 +28,17 @@ class AnyFS(fuse.Fuse):
                 elif isinstance(obj, bytes):
                     self.fp = io.BytesIO(obj)
                 else:
-                    raise RuntimeError("Not a bytes-like object")
+                    raise RuntimeError("Not a file-like object")
+
+                self.mutex = Lock()
 
             def release(self, flags):
                 self.fp.close()
 
             def read(self, size, offset):
-                self.fp.seek(offset)
-                return self.fp.read(size)
+                with self.mutex:
+                    self.fp.seek(offset)
+                    return self.fp.read(size)
 
         return FileHandler
 

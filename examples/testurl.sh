@@ -13,8 +13,9 @@ while read -r PATHARG; do
     if [[ "$PATHARG" == / ]]; then
         printf "entity /%s\n" "${!URLMAP[@]}"
     elif [[ -v URLMAP[$NAMEWOSLASH] ]]; then
-        echo "url 0 $PATHARG"
+        echo "url 1 $PATHARG"
         echo "${URLMAP[$NAMEWOSLASH]}"
+        echo "User-Agent:Curl/1.0"
     else
         echo "notfound $PATHARG"
     fi
