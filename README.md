@@ -19,7 +19,7 @@ $ nix profile install github:igsha/anyfs#
 
 ### Mount
 
-Like any fuse-based filesystem instafs should be started as
+Like any fuse-based filesystem `anyfs` should be started as
 ```sh
 $ anyfs /mount/point -c <cmd>
 ```
@@ -44,7 +44,7 @@ The answer on stdout should be in the format `<cmd> [<count>] <path>`, where `<c
 * `bytes` to read.
 The `<count>` indicates how many bytes to read.
 * `entity` is declaration of entity object: file or directory.
-* `url` indicates that the next line contains url to download the content.
+* `url` indicates that the next line contains URL to download the content.
 The `<count>` indicates that there are additional `<count>` lines with URL header parts.
 * `link` contains the redirection path.
 * `notfound` means that the content is unavailable.
@@ -52,3 +52,9 @@ The `<count>` indicates that there are additional `<count>` lines with URL heade
 Try again.
 
 Special `eom` command is always indicates that there are no more messages associated with the `<path>`.
+
+## The insides
+
+The command `url` should contain bytes request.
+The `anyfs` will try to request ranges from the URL using `Range` header and save the result in a local temporary file.
+Local temporary files will be deleted after `anyfs` termination.
