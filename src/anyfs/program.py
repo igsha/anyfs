@@ -28,7 +28,7 @@ def main():
     parser.add_option("-r", "--read", help="Pipe for reading commands")
     parser.add_option("-w", "--write", help="Pipe for writing paths, open it first")
     options, args = parser.parse_args()
-    if "--help" in sys.argv[1:] or "-h" in sys.argv[1:]:
+    if not {"--help", "-h", "--version"}.isdisjoint(set(sys.argv[1:])):
         return 0
 
     mountpoint = parser.fuse_args.mountpoint
