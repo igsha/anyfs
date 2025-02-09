@@ -10,7 +10,7 @@ while read -r PATHARG; do
         printf "entity ${PATHARG}/%s\n" "${ENTITIES[@]#$RELPATH/}"
     elif [[ -r "$RELPATH" ]]; then
         RELPATH="$(readlink -f "$RELPATH")"
-        stat -c "bytes %s ${PATHARG}" "$RELPATH"
+        stat -c "tbytes %s %W ${PATHARG}" "$RELPATH"
         cat "$RELPATH"
     else
         echo "notfound ${PATHARG}"

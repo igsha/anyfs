@@ -5,6 +5,7 @@ class PathStorage:
     def __init__(self, communicator):
         self.communicator = communicator
         self.map = {}
+        self.tsmap = {}
 
     def _appendToParent(self, path):
         if path == "/":
@@ -19,11 +20,24 @@ class PathStorage:
 
         self.map[parent].append(child)
 
+    def _updateTimestamp(self, path, timestamp):
+        if path in self.tsmap:
+            timestamp = min(self.tsmap[path], timestamp)
+
+        self.tsmap[path] = timestamp
+        if path != "/":
+            parent, _ = os.path.split(path)
+            self._updateTimestamp(parent, timestamp)
+
     def _fetch(self, path):
-        for p, val in self.communicator.fetch(path):
-            if val != []:
+        for p, ts, val in self.communicator.fetch(path):
+            if val is None or isinstance(val, IOError):
+                return
+
+            if not isinstance(val, self.communicator.Incomplete):
                 self.map[p] = val
 
+            self._updateTimestamp(p, ts)
             self._appendToParent(p)
             if isinstance(val, str):
                 self._appendToParent(val)
@@ -50,6 +64,9 @@ class PathStorage:
             prev = self.map[cur]
 
         return self.map.get(path, None)
+
+    def gettimestamp(self, path):
+        return self.tsmap.get(path, None)
 
     def __item__(self, path):
         return self.get(path)
