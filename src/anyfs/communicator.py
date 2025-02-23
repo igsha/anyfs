@@ -20,6 +20,15 @@ class Communicator:
     def cleanup(self):
         self.tmpdir.cleanup()
 
+    @staticmethod
+    def _extract(ts, cmd, argstr, n):
+        if cmd[0] == "t":
+            tpl = argstr.split(" ", n)
+            tpl[0] = int(tpl[0]) # timestamp is int
+            return tpl
+        else:
+            return ts, *argstr.split(" ", n - 1)
+
     def fetch(self, path):
         self.ostream.write(f"{path}\n".encode())
         self.ostream.flush()
@@ -29,22 +38,13 @@ class Communicator:
             cmd = tpl[0]
             timestamp = self.curtime
             if cmd == "bytes" or cmd == "tbytes":
-                if cmd[0] == "t":
-                    timestamp, count, filepath = tpl[1].split(" ", 2)
-                    timestamp = int(timestamp)
-                else:
-                    count, filepath = tpl[1].split(" ", 1)
-
+                timestamp, count, filepath = self._extract(timestamp, cmd, tpl[1], 2)
                 yield filepath, timestamp, self.istream.read(int(count))
-            elif cmd == "entity":
-                yield tpl[1], timestamp, self.Incomplete()
+            elif cmd == "entity" or cmd == "tentity":
+                timestamp, filepath = self._extract(timestamp, cmd, tpl[1], 1)
+                yield filepath, timestamp, self.Incomplete()
             elif cmd == "url" or cmd == "turl":
-                if cmd[0] == "t":
-                    timestamp, count, filepath = tpl[1].split(" ", 2)
-                    timestamp = int(timestamp)
-                else:
-                    count, filepath = tpl[1].split(" ", 1)
-
+                timestamp, count, filepath = self._extract(timestamp, cmd, tpl[1], 2)
                 url = self.istream.readline().strip().decode()
                 headers = {}
                 for _ in range(int(count)):
@@ -53,12 +53,7 @@ class Communicator:
 
                 yield filepath, timestamp, ContentCache(self.session, url, self.tmpdir.name, headers)
             elif cmd == "link" or cmd == "tlink":
-                if cmd[0] == "t":
-                    timestamp, filepath = tpl[1].split(" ", 1)
-                    timestamp = int(timestamp)
-                else:
-                    filepath = tpl[1]
-
+                timestamp, filepath = self._extract(timestamp, cmd, tpl[1], 1)
                 yield filepath, timestamp, self.istream.readline().strip().decode()
             elif cmd == "eom":
                 break
