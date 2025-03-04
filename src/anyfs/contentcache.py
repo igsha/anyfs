@@ -8,12 +8,17 @@ from .cachedfile import CachedFile
 class ContentCache:
     def __init__(self, session, url, tempdir, headers={}):
         self.session = session
-        self.url = url
+        if isinstance(url, list):
+            self.urls = url
+        else:
+            self.urls = [url]
+
+        self.url = self.urls[0]
         self.headers = headers
         self.size = None
 
-        ext = url.rfind(".")
-        ext = url[ext:] if ext != -1 else ".bin"
+        ext = self.url.rfind(".")
+        ext = self.url[ext:] if ext != -1 else ".bin"
         self.tempfile = NamedTemporaryFile(mode="w+b", suffix=ext, dir=tempdir, delete=False)
         self.chunks = SortedDict()
 
@@ -28,16 +33,18 @@ class ContentCache:
         if self.size is not None:
             return self.size
 
-        for method in ["HEAD", "GET"]:
-            req = requests.Request(method, self.url, self.headers)
-            with self.session.send(req.prepare(), stream=True) as r:
-                if not r.ok:
-                    continue
+        for url in self.urls:
+            for method in ["HEAD", "GET"]:
+                req = requests.Request(method, url, self.headers)
+                with self.session.send(req.prepare(), stream=True) as r:
+                    if not r.ok:
+                        continue
 
-                try:
-                    self.size = int(r.headers["content-length"])
-                    return self.size
-                except KeyError:
-                    print("KEYERROR:", r.headers)
+                    try:
+                        self.size = int(r.headers["content-length"])
+                        self.url = url
+                        return self.size
+                    except KeyError:
+                        print("KEYERROR:", r.headers)
 
         return None

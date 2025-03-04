@@ -29,6 +29,21 @@ class Communicator:
         else:
             return ts, *argstr.split(" ", n - 1)
 
+    def _fetchurl(self, cmd, rest, timestamp):
+        counturls = 1
+        if cmd[-1] == "s":
+            timestamp, counturls, counthdrs, filepath = self._extract(timestamp, cmd, rest, 3)
+        else:
+            timestamp, counthdrs, filepath = self._extract(timestamp, cmd, rest, 2)
+
+        urls = [self.istream.readline().strip().decode() for _ in range(int(counturls))]
+        headers = {}
+        for _ in range(int(counthdrs)):
+            key, value = self.istream.readline().strip().decode().split(":", 1)
+            headers[key] = value
+
+        return filepath, timestamp, ContentCache(self.session, urls, self.tmpdir.name, headers)
+
     def fetch(self, path):
         self.ostream.write(f"{path}\n".encode())
         self.ostream.flush()
@@ -43,15 +58,8 @@ class Communicator:
             elif cmd == "entity" or cmd == "tentity":
                 timestamp, filepath = self._extract(timestamp, cmd, tpl[1], 1)
                 yield filepath, timestamp, self.Incomplete()
-            elif cmd == "url" or cmd == "turl":
-                timestamp, count, filepath = self._extract(timestamp, cmd, tpl[1], 2)
-                url = self.istream.readline().strip().decode()
-                headers = {}
-                for _ in range(int(count)):
-                    key, value = self.istream.readline().strip().decode().split(":", 1)
-                    headers[key] = value
-
-                yield filepath, timestamp, ContentCache(self.session, url, self.tmpdir.name, headers)
+            elif cmd == "url" or cmd == "turl" or cmd == "urls" or cmd == "turls":
+                yield self._fetchurl(cmd, tpl[1], timestamp)
             elif cmd == "link" or cmd == "tlink":
                 timestamp, filepath = self._extract(timestamp, cmd, tpl[1], 1)
                 yield filepath, timestamp, self.istream.readline().strip().decode()

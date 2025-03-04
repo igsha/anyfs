@@ -47,17 +47,23 @@ Timestamps for the directories are the minimal timestamp value of contained file
 
 | Command | Description |
 |---------|-------------|
-| <pre>bytes &lt;count&gt; &lt;path&gt;<br>&lt;bytes&gt;</pre> | Send `<count>` `<bytes>`. |
+| <pre>bytes &lt;count&gt; &lt;path&gt;<br/>&lt;bytes&gt;</pre> | Send `<count>` `<bytes>`. |
 | <pre>entity &lt;path&gt;</pre> | Forward declaration of directory of file. |
-| <pre>url &lt;count&gt; &lt;path&gt;<br>&lt;url&gt;<br>&lt;Head1:value1&gt;<br>...</pre> | Send `<url>`. It can be sent `<count>` header fields. |
-| <pre>link &lt;path&gt;<br>&lt;real path&gt;</pre> | Link `<real path>` by `<path>`. |
+| <pre>url &lt;count&gt; &lt;path&gt;<br/>&lt;url&gt;<br/>&lt;Head1:value1&gt;<br/>...</pre> \
+    | Send `<url>`. It can be sent `<count>` header fields. |
+| <pre>urls &lt;ucount&gt; &lt;count&gt; &lt;path&gt;<br/>&lt;url1&gt;<br/>&lt;url2&gt;<br/>...<br/>&lt;Head1:value1&gt;<br/>...</pre> \
+    | Send `<ucount>` `<urls>`: it will be used the next url if the previous one returns 404. Also it can be sent `<count>` header fields. |
+| <pre>link &lt;path&gt;<br/>&lt;real path&gt;</pre> | Link `<real path>` by `<path>`. |
 | <pre>notfound &lt;path&gt;</pre> | The requested `<path>` has not been found. |
 | <pre>ioerror &lt;path&gt;</pre> | The requested `<path>` caused an I/O error. |
 | <pre>eom</pre> | The special indicator to stop input command processing. |
-| <pre>tbytes &lt;timestamp&gt; &lt;count&gt; &lt;path&gt;<br>&lt;bytes&gt;</pre> | `bytes` with timestamp. |
+| <pre>tbytes &lt;timestamp&gt; &lt;count&gt; &lt;path&gt;<br/>&lt;bytes&gt;</pre> | `bytes` with timestamp. |
 | <pre>tentity &lt;timestamp&gt; &lt;path&gt;</pre> | `entity` with timestamp. |
-| <pre>turl &lt;timestamp&gt; &lt;count&gt; &lt;path&gt;<br>&lt;url&gt;<br>&lt;Head1:value1&gt;<br>...</pre> | `url` with timestamp. |
-| <pre>tlink &lt;timestamp&gt; &lt;path&gt;<br>&lt;real path&gt;</pre> | `link` with timestamp. |
+| <pre>turl &lt;timestamp&gt; &lt;count&gt; &lt;path&gt;<br/>&lt;url&gt;<br/>&lt;Head1:value1&gt;<br/>...</pre> \
+    | `url` with timestamp. |
+| <pre>turls &lt;timestamp&gt; &lt;ucount&gt; &lt;count&gt; &lt;path&gt;<br/>&lt;url1&gt;<br/>&lt;url2&gt;<br/>...<br/>&lt;Head1:value1&gt;<br/>...</pre> \
+    | `urls` with timestamp. |
+| <pre>tlink &lt;timestamp&gt; &lt;path&gt;<br/>&lt;real path&gt;</pre> | `link` with timestamp. |
 
 ## The insides
 
