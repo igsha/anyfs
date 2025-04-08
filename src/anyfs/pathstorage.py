@@ -40,6 +40,7 @@ class PathStorage:
             self._updateTimestamp(p, ts)
             self._appendToParent(p)
             if isinstance(val, str):
+                self._updateTimestamp(val, ts)
                 self._appendToParent(val)
 
     def get(self, path):

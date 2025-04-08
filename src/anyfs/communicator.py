@@ -13,7 +13,6 @@ class Communicator:
         self.istream = istream
         self.ostream = ostream
         self.tmpdir = tempfile.TemporaryDirectory(prefix="anyfs-")
-        self.session = ContentCache.newSession()
         self.curtime = int(datetime.now().timestamp())
         atexit.register(self.cleanup)
 
@@ -42,7 +41,7 @@ class Communicator:
             key, value = self.istream.readline().strip().decode().split(":", 1)
             headers[key] = value
 
-        return filepath, timestamp, ContentCache(self.session, urls, self.tmpdir.name, headers)
+        return filepath, timestamp, ContentCache(urls, self.tmpdir.name, headers)
 
     def fetch(self, path):
         self.ostream.write(f"{path}\n".encode())

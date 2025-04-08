@@ -6,8 +6,8 @@ from .cachedfile import CachedFile
 
 
 class ContentCache:
-    def __init__(self, session, url, tempdir, headers={}):
-        self.session = session
+    def __init__(self, url, tempdir, headers={}):
+        self.session = requests.Session()
         if isinstance(url, list):
             self.urls = url
         else:
@@ -21,10 +21,6 @@ class ContentCache:
         ext = self.url[ext:] if ext != -1 else ".bin"
         self.tempfile = NamedTemporaryFile(mode="w+b", suffix=ext, dir=tempdir, delete=False)
         self.chunks = SortedDict()
-
-    @staticmethod
-    def newSession():
-        return requests.Session()
 
     def open(self):
         return CachedFile(self.session, self.url, self.headers, self.tempfile.name, self.chunks)
