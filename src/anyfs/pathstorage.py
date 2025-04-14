@@ -30,7 +30,7 @@ class PathStorage:
             self._updateTimestamp(parent, timestamp)
 
     def _fetch(self, path):
-        for p, ts, val in self.communicator.fetch(path):
+        for p, ts, ishidden, val in self.communicator.fetch(path):
             if val is None or isinstance(val, IOError):
                 return
 
@@ -38,10 +38,13 @@ class PathStorage:
                 self.map[p] = val
 
             self._updateTimestamp(p, ts)
-            self._appendToParent(p)
+            if not ishidden:
+                self._appendToParent(p)
+
             if isinstance(val, str):
                 self._updateTimestamp(val, ts)
-                self._appendToParent(val)
+                if not ishidden:
+                    self._appendToParent(val)
 
     def get(self, path):
         path = path.strip()

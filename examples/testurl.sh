@@ -11,13 +11,13 @@ declare -A URLMAP=(\
 while read -r PATHARG; do
     NAMEWOSLASH="${PATHARG:1:${#PATHARG}}"
     if [[ "$PATHARG" == / ]]; then
-        printf "entity /%s\n" "${!URLMAP[@]}"
+        printf "entity path=/%s\n" "${!URLMAP[@]}"
     elif [[ -v URLMAP[$NAMEWOSLASH] ]]; then
-        echo "url 1 $PATHARG"
+        echo "url headers=1 path=$PATHARG"
         echo "${URLMAP[$NAMEWOSLASH]}"
         echo "User-Agent:Curl/1.0"
     else
-        echo "notfound $PATHARG"
+        echo "notfound path=$PATHARG"
     fi
 
     echo "eom"

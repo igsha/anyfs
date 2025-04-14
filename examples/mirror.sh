@@ -7,13 +7,13 @@ while read -r PATHARG; do
     if [[ -d "$RELPATH" ]]; then
         ENTITIES=("$RELPATH"/*)
         PATHARG="${PATHARG%/}"
-        printf "entity ${PATHARG}/%s\n" "${ENTITIES[@]#$RELPATH/}"
+        printf "entity path=${PATHARG}/%s\n" "${ENTITIES[@]#$RELPATH/}"
     elif [[ -r "$RELPATH" ]]; then
         RELPATH="$(readlink -f "$RELPATH")"
-        stat -c "tbytes %s %W ${PATHARG}" "$RELPATH"
+        stat -c "bytes size=%s time=%W path=${PATHARG}" "$RELPATH"
         cat "$RELPATH"
     else
-        echo "notfound ${PATHARG}"
+        echo "notfound path=${PATHARG}"
     fi
     echo "eom"
 done

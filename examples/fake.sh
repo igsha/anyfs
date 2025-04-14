@@ -9,13 +9,13 @@ main() {
     while read -u $1 -r PATHARG; do
         NAMEWOSLASH="${PATHARG:1:${#PATHARG}}"
         if [[ "$PATHARG" == / ]]; then
-            echo "entity /file.txt" >&$2
+            echo "entity path=/file.txt" >&$2
         elif [[ -v URLMAP[$NAMEWOSLASH] ]]; then
             LEN=$(echo "${URLMAP[$NAMEWOSLASH]}" | wc -c)
-            echo "bytes $LEN $PATHARG" >&$2
+            echo "bytes size=$LEN path=$PATHARG" >&$2
             echo "${URLMAP[$NAMEWOSLASH]}" >&$2
         else
-            echo "notfound $PATHARG" >&$2
+            echo "notfound path=$PATHARG" >&$2
         fi
 
         echo "eom" >&$2

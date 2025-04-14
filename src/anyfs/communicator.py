@@ -20,54 +20,70 @@ class Communicator:
         self.tmpdir.cleanup()
 
     @staticmethod
-    def _extract(ts, cmd, argstr, n):
-        if cmd[0] == "t":
-            tpl = argstr.split(" ", n)
-            tpl[0] = int(tpl[0]) # timestamp is int
-            return tpl
-        else:
-            return ts, *argstr.split(" ", n - 1)
+    def _extract(argstr):
+        arg, *rest = argstr.split(" ", 1)
+        ret = {}
+        while True:
+            name, val = arg.split("=", 1)
+            ret[name] = val
+            if len(rest) == 0:
+                break
 
-    def _fetchurl(self, cmd, rest, timestamp):
-        counturls = 1
-        if cmd[-1] == "s":
-            timestamp, counturls, counthdrs, filepath = self._extract(timestamp, cmd, rest, 3)
-        else:
-            timestamp, counthdrs, filepath = self._extract(timestamp, cmd, rest, 2)
+            if rest[0].startswith("path"):
+                arg, rest = rest[0], []
+            else:
+                arg, *rest = rest[0].split(" ", 1)
 
-        urls = [self.istream.readline().strip().decode() for _ in range(int(counturls))]
+        return ret
+
+    def _parsestdargs(self, args):
+        timestamp = int(args.get("time", self.curtime))
+        filepath = args["path"]
+        ishidden = args.get("hide", "false").lower() in ["true", "1", "yes", "on"]
+        return filepath, timestamp, ishidden
+
+    def _fetchurl(self, argstr):
+        d = self._extract(argstr)
+        dflt = self._parsestdargs(d)
+        counturls = int(d.get("count", 1))
+        counthdrs = int(d.get("headers", 0))
+
+        urls = [self.istream.readline().strip().decode() for _ in range(counturls)]
         headers = {}
-        for _ in range(int(counthdrs)):
+        for _ in range(counthdrs):
             key, value = self.istream.readline().strip().decode().split(":", 1)
             headers[key] = value
 
-        return filepath, timestamp, ContentCache(urls, self.tmpdir.name, headers)
+        return *dflt, ContentCache(urls, self.tmpdir.name, headers)
 
+    # filepath, timestamp, ishidden, Class
     def fetch(self, path):
         self.ostream.write(f"{path}\n".encode())
         self.ostream.flush()
 
         while t := self.istream.readline().strip().decode():
-            tpl = t.split(" ", 1)
-            cmd = tpl[0]
-            timestamp = self.curtime
-            if cmd == "bytes" or cmd == "tbytes":
-                timestamp, count, filepath = self._extract(timestamp, cmd, tpl[1], 2)
-                yield filepath, timestamp, self.istream.read(int(count))
-            elif cmd == "entity" or cmd == "tentity":
-                timestamp, filepath = self._extract(timestamp, cmd, tpl[1], 1)
-                yield filepath, timestamp, self.Incomplete()
-            elif cmd == "url" or cmd == "turl" or cmd == "urls" or cmd == "turls":
-                yield self._fetchurl(cmd, tpl[1], timestamp)
-            elif cmd == "link" or cmd == "tlink":
-                timestamp, filepath = self._extract(timestamp, cmd, tpl[1], 1)
-                yield filepath, timestamp, self.istream.readline().strip().decode()
+            cmd, *rest = t.split(" ", 1)
+            if cmd == "bytes":
+                d = self._extract(rest[0])
+                ret = self._parsestdargs(d)
+                count = int(d["size"])
+                yield *ret, self.istream.read(count)
+            elif cmd == "entity":
+                ret = self._parsestdargs(self._extract(rest[0]))
+                yield *ret, self.Incomplete()
+            elif cmd == "url":
+                yield self._fetchurl(rest[0])
+            elif cmd == "link":
+                ret = self._parsestdargs(self._extract(rest[0]))
+                yield *ret, self.istream.readline().strip().decode()
+            elif cmd == "notfound":
+                ret = self._parsestdargs(self._extract(rest[0]))
+                yield *ret, None
+            elif cmd == "ioerror":
+                ret = self._parsestdargs(self._extract(rest[0]))
+                yield *ret, IOError("network failure")
             elif cmd == "eom":
                 break
-            elif cmd == "notfound":
-                yield tpl[1], timestamp, None
-            elif cmd == "ioerror":
-                yield tpl[1], timestamp, IOError("network failure")
             else:
                 raise RuntimeError(f"Unknown command {cmd}")
 
