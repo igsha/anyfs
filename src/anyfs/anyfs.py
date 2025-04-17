@@ -43,8 +43,7 @@ class AnyFS(fuse.Fuse):
         return FileHandler
 
     def getattr(self, path):
-        obj = self.storage.get(path)
-        ts = self.storage.gettimestamp(path)
+        obj, ts = self.storage.getwithtimestamp(path)
         if isinstance(obj, list):
             return MyStat.dir(ts)
         elif isinstance(obj, bytes) or isinstance(obj, ContentCache):

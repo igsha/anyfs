@@ -5,10 +5,11 @@ import tempfile
 from .contentcache import ContentCache
 
 
-class Communicator:
-    class Incomplete:
-        pass
+class Incomplete:
+    pass
 
+
+class Communicator:
     def __init__(self, istream, ostream):
         self.istream = istream
         self.ostream = ostream
@@ -21,18 +22,16 @@ class Communicator:
 
     @staticmethod
     def _extract(argstr):
-        arg, *rest = argstr.split(" ", 1)
+        rest = [argstr]
         ret = {}
-        while True:
-            name, val = arg.split("=", 1)
-            ret[name] = val
-            if len(rest) == 0:
-                break
-
+        while len(rest) != 0:
             if rest[0].startswith("path"):
                 arg, rest = rest[0], []
             else:
                 arg, *rest = rest[0].split(" ", 1)
+
+            name, val = arg.split("=", 1)
+            ret[name] = val
 
         return ret
 
@@ -70,7 +69,7 @@ class Communicator:
                 yield *ret, self.istream.read(count)
             elif cmd == "entity":
                 ret = self._parsestdargs(self._extract(rest[0]))
-                yield *ret, self.Incomplete()
+                yield *ret, Incomplete()
             elif cmd == "url":
                 yield self._fetchurl(rest[0])
             elif cmd == "link":
